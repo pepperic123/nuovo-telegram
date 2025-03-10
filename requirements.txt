@@ -8,4 +8,4 @@ telegram
 python-amazon-simple-product-api
 paapi5-python-sdk
 python-amazon-paapi3
-git+https://github.com/doprdele/paapi5-python-sdk.git
+paapi5-python-sdk @ git+https://github.com/geminus/paapi5-python-sdk.git
