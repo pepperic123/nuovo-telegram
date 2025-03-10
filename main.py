@@ -22,6 +22,10 @@ sent_asins = set()
 async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
+
+        # Controllo se la chiave 'description' esiste, altrimenti la sostituisco con una stringa vuota
+        description = offer.get('description', 'Nessuna descrizione disponibile.')
+
         text = (
             "🔥 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
             "🎉 <b>Super Offerta!</b>\n\n"
@@ -34,7 +38,7 @@ async def send_telegram(offer):
             asin=offer['asin'],
             tag=AMAZON_PARTNER_TAG,
             title=offer['title'],
-            description=offer['description']
+            description=description
         )
 
         await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
