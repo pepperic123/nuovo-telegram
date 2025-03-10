@@ -7,4 +7,4 @@ python-amazon-paapi
 telegram
 python-amazon-simple-product-api
 python-amazon-paapi3
-paapi5-python-sdk @ git+https://github.com/geminus/paapi5-python-sdk.git
+paapi5-python-sdk @ git+https://github.com/hirotoshi/paapi5-python-sdk.git
