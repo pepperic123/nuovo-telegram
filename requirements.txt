@@ -6,4 +6,3 @@ boto3
 python-amazon-paapi
 telegram
 python-amazon-simple-product-api
-python-amazon-paapi3
