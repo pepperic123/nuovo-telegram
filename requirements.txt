@@ -8,3 +8,4 @@ telegram
 python-amazon-simple-product-api
 python-amazon-paapi3
 paapi5-python-sdk
+pip==25.0.1
