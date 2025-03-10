@@ -1,4 +1,3 @@
-from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.search_items_request import SearchItemsRequest
 from paapi5_python_sdk.rest import ApiException
 from config import (
