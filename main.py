@@ -23,8 +23,18 @@ async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
 
-        # Controllo se la chiave 'description' esiste, altrimenti la sostituisco con una stringa vuota
-        description = offer.get('description', 'Nessuna descrizione disponibile.')
+        # Stampa i dati dell'offerta per debug
+        print("DEBUG - Offerta ricevuta:", offer)
+
+        # Controlla se la chiave 'description' esiste
+        description = offer.get('description', '').strip()
+        if not description:
+            description = offer.get('features', [])  # Prova a prendere la descrizione da 'features'
+            if isinstance(description, list):
+                description = "\n".join(description)  # Converte la lista in stringa
+            
+        if not description:
+            description = "Nessuna descrizione disponibile."
 
         text = (
             "🔥 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
@@ -42,7 +52,7 @@ async def send_telegram(offer):
         )
 
         await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
-        sent_asins.add(offer['asin'])  # Aggiungi l'ASIN alla lista dei già inviati
+        sent_asins.add(offer['asin'])  
         logging.info(f"✅ Offerta inviata: {offer['title'][:30]}...")
     except Exception as e:
         logging.error(f"❌ Errore invio Telegram: {str(e)}")
