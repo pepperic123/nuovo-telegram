@@ -23,13 +23,22 @@ async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
         text = (
-            f"🔥 *Offerta imperdibile su {offer['title']}!* 🔥\n\n"
-            f"💰 *Prezzo:* {offer['price']}\n\n"
-            f"⏳ *Ultimi pezzi disponibili!*\n\n"
-            f"🔗 [Compra ora!](https://www.amazon.it/dp/{offer['asin']}?tag={AMAZON_PARTNER_TAG})"
+            "🔥 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
+            "🎉 <b>Super Offerta!</b>\n\n"
+            "🔗 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nell'app Amazon</a>\n"
+            "🔗 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nel browser</a>\n\n"
+            "<b>Amazon</b>\n"
+            "<b>{title}</b>\n\n"
+            "{description}"
+        ).format(
+            asin=offer['asin'],
+            tag=AMAZON_PARTNER_TAG,
+            title=offer['title'],
+            description=offer['description']
         )
-        await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="Markdown")
-        sent_asins.add(offer['asin'])  # Aggiungi l'ASIN solo se l'invio è stato completato correttamente
+
+        await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
+        sent_asins.add(offer['asin'])  # Aggiungi l'ASIN alla lista dei già inviati
         logging.info(f"✅ Offerta inviata: {offer['title'][:30]}...")
     except Exception as e:
         logging.error(f"❌ Errore invio Telegram: {str(e)}")
