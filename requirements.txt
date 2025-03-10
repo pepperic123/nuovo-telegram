@@ -1,0 +1,10 @@
+requests
+python-telegram-bot
+schedule
+flask
+boto3
+python-amazon-paapi
+telegram
+python-amazon-simple-product-api
+paapi5-python-sdk
+python-amazon-paapi3
