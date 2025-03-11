@@ -17,7 +17,7 @@ from amazon_api_wrapper import AmazonApiWrapper
 # Configurazione GitHub per il salvataggio degli ASIN
 GITHUB_REPO = "https://raw.githubusercontent.com/pepperic123/telegram-amazon-bot/main/sent_asins.txt"  # 🔹 Sostituisci con il tuo repo
 GITHUB_FILE_PATH = "sent_asins.txt"
-GITHUB_TOKEN = "tuo-token-personale"  # 🔹 Sostituisci con il tuo token personale
+GITHUB_TOKEN = "Gi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tHub"  # 🔹 Sostituisci con il tuo token personale
 
 # Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
