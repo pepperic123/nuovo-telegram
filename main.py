@@ -3,6 +3,9 @@ import random
 import asyncio
 import schedule
 import threading
+import os
+import requests
+import logging
 from telegram import Bot
 from flask import Flask
 from config import (
@@ -10,13 +13,65 @@ from config import (
     TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, AMAZON_CATEGORIES
 )
 from amazon_api_wrapper import AmazonApiWrapper
-import logging
+
+# Configurazione GitHub per il salvataggio degli ASIN
+GITHUB_REPO = "tuo-username/tuo-repo"  # 🔹 Sostituisci con il tuo repo
+GITHUB_FILE_PATH = "sent_asins.txt"
+GITHUB_TOKEN = "tuo-token-personale"  # 🔹 Sostituisci con il tuo token personale
 
 # Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
 
-# Memorizza gli ASIN inviati per evitare duplicati
-sent_asins = set()
+# Funzione per caricare gli ASIN già inviati da GitHub
+def load_sent_asins():
+    try:
+        url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/{GITHUB_FILE_PATH}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return set(response.text.splitlines())
+    except Exception as e:
+        logging.error(f"Errore nel caricamento degli ASIN da GitHub: {e}")
+    return set()
+
+# Funzione per salvare gli ASIN inviati localmente
+def save_sent_asins():
+    try:
+        with open("sent_asins.txt", "w") as file:
+            file.write("\n".join(sent_asins))
+    except Exception as e:
+        logging.error(f"Errore nel salvataggio degli ASIN: {e}")
+
+# Funzione per aggiornare il file su GitHub
+def update_github():
+    try:
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
+        headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+
+        # Ottieni l'ultima versione del file per l'SHA
+        response = requests.get(url, headers=headers)
+        response_json = response.json()
+        sha = response_json.get("sha", "")
+
+        # Carica il contenuto aggiornato
+        with open("sent_asins.txt", "r") as file:
+            content = file.read().encode("utf-8")
+
+        data = {
+            "message": "Aggiornamento sent_asins.txt",
+            "content": content.decode("utf-8"),
+            "sha": sha,
+        }
+
+        response = requests.put(url, json=data, headers=headers)
+        if response.status_code in [200, 201]:
+            logging.info("✅ ASIN aggiornati su GitHub")
+        else:
+            logging.error(f"❌ Errore aggiornamento GitHub: {response.json()}")
+    except Exception as e:
+        logging.error(f"❌ Errore update GitHub: {e}")
+
+# Carica gli ASIN già inviati da GitHub
+sent_asins = load_sent_asins()
 
 # Funzione per inviare un'offerta su Telegram
 async def send_telegram(offer):
@@ -52,7 +107,12 @@ async def send_telegram(offer):
         )
 
         await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
+        
+        # Aggiunge l'ASIN agli inviati e aggiorna GitHub
         sent_asins.add(offer['asin'])  
+        save_sent_asins()
+        update_github()
+
         logging.info(f"✅ Offerta inviata: {offer['title'][:30]}...")
     except Exception as e:
         logging.error(f"❌ Errore invio Telegram: {str(e)}")
@@ -95,3 +155,4 @@ if __name__ == "__main__":
     job()
 
     app.run(host="0.0.0.0", port=8001)
+
