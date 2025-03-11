@@ -1,6 +1,5 @@
 import time
 import random
-import base64
 import asyncio
 import schedule
 import threading
@@ -22,13 +21,16 @@ from amazon_api_wrapper import AmazonApiWrapper
 firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
 
 if firebase_credentials_json:
-    cred_dict = json.loads(firebase_credentials_json)
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    print("✅ Firebase Firestore connesso correttamente!")
+    try:
+        cred_dict = json.loads(firebase_credentials_json)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        logging.info("✅ Firebase Firestore connesso correttamente!")
+    except Exception as e:
+        logging.error(f"❌ Errore inizializzazione Firebase: {e}")
 else:
-    print("❌ Errore: variabile FIREBASE_CREDENTIALS non trovata!")
+    logging.error("❌ Errore: Variabile FIREBASE_CREDENTIALS non trovata!")
 
 # Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
@@ -39,7 +41,7 @@ def load_sent_asins():
         docs = db.collection("sent_asins").stream()
         return {doc.id for doc in docs}
     except Exception as e:
-        logging.error(f"Errore nel caricamento degli ASIN da Firestore: {e}")
+        logging.error(f"❌ Errore nel caricamento degli ASIN da Firestore: {e}")
         return set()
 
 # 🔹 Funzione per salvare un nuovo ASIN in Firestore
@@ -47,7 +49,7 @@ def save_sent_asin(asin):
     try:
         db.collection("sent_asins").document(asin).set({"timestamp": time.time()})
     except Exception as e:
-        logging.error(f"Errore nel salvataggio dell'ASIN su Firestore: {e}")
+        logging.error(f"❌ Errore nel salvataggio dell'ASIN su Firestore: {e}")
 
 # Carica gli ASIN già inviati
 sent_asins = load_sent_asins()
@@ -56,8 +58,6 @@ sent_asins = load_sent_asins()
 async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
-
-        print("DEBUG - Offerta ricevuta:", offer)
 
         description = offer.get('description', '').strip()
         if not description:
@@ -105,7 +105,6 @@ def job():
 
 # 🔹 Pianificazione dell'invio automatico delle offerte
 def run_scheduler():
-    schedule.every(29).to(55).minutes.do(job)
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -120,9 +119,14 @@ def home():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.info("🚀 Avvio del bot e del web server...")
-    threading.Thread(target=run_scheduler, daemon=True).start()
+    
+    # Avvia il job iniziale in un thread separato
+    threading.Thread(target=job, daemon=True).start()
 
-    # 🔹 Avvio immediato della prima offerta
-    job()
+    # Avvia lo scheduler in un thread separato
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
 
-    app.run(host="0.0.0.0", port=8001)
+    # 🔹 Imposta la porta per Render (usa $PORT se esiste, altrimenti 8000)
+    port = int(os.getenv("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)
