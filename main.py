@@ -1,5 +1,6 @@
 import time
 import random
+import base64
 import asyncio
 import schedule
 import threading
@@ -19,11 +20,17 @@ from amazon_api_wrapper import AmazonApiWrapper
 
 # ✅ Inizializza Firebase Firestore
 firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
+db = None  # 🔹 Evita l'errore "name 'db' is not defined"
 
 if firebase_credentials_json:
     try:
-        cred_dict = json.loads(firebase_credentials_json)
-        cred = credentials.Certificate(cred_dict)
+        # 🔹 Crea un file temporaneo con la chiave Firebase
+        temp_cred_path = "/tmp/firebase_credentials.json"
+        with open(temp_cred_path, "w") as f:
+            json.dump(json.loads(firebase_credentials_json), f)
+
+        # 🔹 Usa il file per inizializzare Firebase
+        cred = credentials.Certificate(temp_cred_path)
         firebase_admin.initialize_app(cred)
         db = firestore.client()
         logging.info("✅ Firebase Firestore connesso correttamente!")
@@ -37,19 +44,23 @@ amazon_api = AmazonApiWrapper()
 
 # 🔹 Funzione per caricare gli ASIN già inviati da Firestore
 def load_sent_asins():
+    if db is None:
+        return set()
     try:
         docs = db.collection("sent_asins").stream()
         return {doc.id for doc in docs}
     except Exception as e:
-        logging.error(f"❌ Errore nel caricamento degli ASIN da Firestore: {e}")
+        logging.error(f"Errore nel caricamento degli ASIN da Firestore: {e}")
         return set()
 
 # 🔹 Funzione per salvare un nuovo ASIN in Firestore
 def save_sent_asin(asin):
+    if db is None:
+        return
     try:
         db.collection("sent_asins").document(asin).set({"timestamp": time.time()})
     except Exception as e:
-        logging.error(f"❌ Errore nel salvataggio dell'ASIN su Firestore: {e}")
+        logging.error(f"Errore nel salvataggio dell'ASIN su Firestore: {e}")
 
 # Carica gli ASIN già inviati
 sent_asins = load_sent_asins()
@@ -58,6 +69,8 @@ sent_asins = load_sent_asins()
 async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
+
+        print("DEBUG - Offerta ricevuta:", offer)
 
         description = offer.get('description', '').strip()
         if not description:
@@ -105,6 +118,7 @@ def job():
 
 # 🔹 Pianificazione dell'invio automatico delle offerte
 def run_scheduler():
+    schedule.every(29).to(55).minutes.do(job)
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -119,14 +133,9 @@ def home():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.info("🚀 Avvio del bot e del web server...")
-    
-    # Avvia il job iniziale in un thread separato
-    threading.Thread(target=job, daemon=True).start()
+    threading.Thread(target=run_scheduler, daemon=True).start()
 
-    # Avvia lo scheduler in un thread separato
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
+    # 🔹 Avvio immediato della prima offerta
+    job()
 
-    # 🔹 Imposta la porta per Render (usa $PORT se esiste, altrimenti 8000)
-    port = int(os.getenv("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=8001)
