@@ -26,7 +26,6 @@ AMAZON_CATEGORIES = [
     "Automotive",        # Automotive
     "Baby",              # Bambini
     "Beauty",            # Bellezza
-    "Books",             # Libri
     "Clothing",          # Abbigliamento
     "Electronics",       # Elettronica
     "Grocery",           # Alimentari
@@ -37,7 +36,6 @@ AMAZON_CATEGORIES = [
     "KindleStore",       # Kindle Store
     "Kitchen",           # Cucina
     "Luggage",           # Valigie
-    "Music",             # Musica
     "OfficeProducts",    # Prodotti per ufficio
     "PersonalCare",      # Cura personale
     "Shoes",             # Scarpe
