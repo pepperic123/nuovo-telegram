@@ -64,7 +64,9 @@ async def send_telegram(offer):
     except Exception as e:
         logging.error(f"❌ Errore invio Telegram: {str(e)}")
 
-# 🔹 Funzione principale per trovare e inviare offerte
+# Parole chiave per escludere film e musica
+EXCLUDED_KEYWORDS = ["DVD", "Blu-ray", "Prime Video", "Film", "Movie", "Serie TV", "Soundtrack", "Vinile", "CD", "Musica"]
+
 def job():
     logging.info("⚡ Avvio ricerca offerte")
     category = random.choice(AMAZON_CATEGORIES)
@@ -73,6 +75,14 @@ def job():
     if offers:
         random.shuffle(offers)
         for offer in offers:
+            title = offer['title'].lower()
+
+            # 🔹 Controlla se il titolo contiene parole chiave da escludere
+            if any(keyword.lower() in title for keyword in EXCLUDED_KEYWORDS):
+                logging.info(f"⏭️ Offerta esclusa (film/musica): {offer['title']}")
+                continue  # Salta questo prodotto
+
+            # 🔹 Controlla se l'ASIN è già stato inviato
             if offer['asin'] not in sent_asins:
                 asyncio.run(send_telegram(offer))
                 break
