@@ -26,7 +26,7 @@ amazon_api = AmazonApiWrapper()
 # Funzione per caricare gli ASIN già inviati da GitHub
 def load_sent_asins():
     try:
-        url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/{GITHUB_FILE_PATH}"
+        url = "https://raw.githubusercontent.com/pepperic123/nuovo-telegram/main/sent_asins.txt"
         response = requests.get(url)
         if response.status_code == 200:
             return set(response.text.splitlines())
