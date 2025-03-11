@@ -1,5 +1,6 @@
 import time
 import random
+import base64
 import asyncio
 import schedule
 import threading
@@ -17,7 +18,7 @@ from amazon_api_wrapper import AmazonApiWrapper
 # Configurazione GitHub per il salvataggio degli ASIN
 GITHUB_REPO = "pepperic123/nuovo-telegram"  # 🔹 Sostituisci con il tuo repo
 GITHUB_FILE_PATH = "sent_asins.txt"
-GITHUB_TOKEN = "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"  # 🔹 Sostituisci con il tuo token personale
+GITHUB_TOKEN = "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"  # 🔹 Sostituisci con il tuo token personale
 
 # Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
@@ -52,13 +53,14 @@ def update_github():
         response_json = response.json()
         sha = response_json.get("sha", "")
 
-        # Carica il contenuto aggiornato
+        # Carica il contenuto aggiornato in Base64
         with open("sent_asins.txt", "r") as file:
-            content = file.read().encode("utf-8")
+            content = file.read()
+            encoded_content = base64.b64encode(content.encode()).decode()  # 🔹 Converti in Base64
 
         data = {
             "message": "Aggiornamento sent_asins.txt",
-            "content": content.decode("utf-8"),
+            "content": encoded_content,  # 🔹 Deve essere in Base64
             "sha": sha,
         }
 
