@@ -48,7 +48,11 @@ class AmazonApiWrapper:
                         continue 
 
                     # Ottieni il prezzo attuale
-                    price_current = item.offers.listings[0].price.amount if item.offers and item.offers.listings else None
+                    price_current = None
+if item.offers and item.offers.listings:
+    first_listing = item.offers.listings[0]
+    if hasattr(first_listing, "price") and hasattr(first_listing.price, "amount"):
+        price_current = first_listing.price.amount
                     
                     # Ottieni il prezzo originale (solo se saving_basis esiste e ha 'amount')
                     price_original = None
