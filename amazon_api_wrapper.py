@@ -43,7 +43,7 @@ class AmazonApiWrapper:
                 for item in response.search_result.items:
                     offer = {
                         "title": item.item_info.title.display_value,
-                        "price": item.offers.listings[0].price.display_amount if item.offers else "N/A",
+                        "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else "N/A",
                         "image": item.images.primary.large.url if item.images else "N/A",
                         "link": item.detail_page_url,
                         "asin": item.asin
