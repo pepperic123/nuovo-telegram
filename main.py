@@ -26,14 +26,21 @@ if firebase_credentials_json:
     try:
         # 🔹 Crea un file temporaneo con la chiave Firebase
         temp_cred_path = "/tmp/firebase_credentials.json"
+        firebase_data = json.loads(firebase_credentials_json)
+        
+        # 🔹 Corregge il problema dei caratteri \n nella chiave privata
+        firebase_data["private_key"] = firebase_data["private_key"].replace("\\n", "\n")
+
+        # 🔹 Scrive il file correggendo il formato
         with open(temp_cred_path, "w") as f:
-            json.dump(json.loads(firebase_credentials_json), f)
+            json.dump(firebase_data, f)
 
         # 🔹 Usa il file per inizializzare Firebase
         cred = credentials.Certificate(temp_cred_path)
         firebase_admin.initialize_app(cred)
         db = firestore.client()
         logging.info("✅ Firebase Firestore connesso correttamente!")
+
     except Exception as e:
         logging.error(f"❌ Errore inizializzazione Firebase: {e}")
 else:
