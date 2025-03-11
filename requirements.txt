@@ -7,3 +7,4 @@ python-amazon-paapi
 telegram
 python-amazon-simple-product-api
 paapi5-python-sdk @ git+https://github.com/hirotoshi/paapi5-python-sdk.git
+firebase-admin
