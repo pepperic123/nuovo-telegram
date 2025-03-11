@@ -98,6 +98,6 @@ if __name__ == "__main__":
     threading.Thread(target=run_scheduler, daemon=True).start()
     
     # 🔹 Avvio immediato della prima offerta
-    job()
+    asyncio.run(job())
     
     app.run(host="0.0.0.0", port=8001)
