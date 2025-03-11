@@ -36,12 +36,14 @@ sent_asins = load_sent_asins()
 async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
+
         description = offer.get('description', '').strip() or "Nessuna descrizione disponibile."
+
         text = (
-            "\U0001F525 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
-            "\U0001F389 <b>Super Offerta!</b>\n\n"
-            "\U0001F517 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nell'app Amazon</a>\n"
-            "\U0001F517 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nel browser</a>\n\n"
+            "🔥 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
+            "🎉 <b>Super Offerta!</b>\n\n"
+            "🔗 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nell'app Amazon</a>\n"
+            "🔗 <a href='https://www.amazon.it/dp/{asin}?tag={tag}'>Apri nel browser</a>\n\n"
             "<b>Amazon</b>\n"
             "<b>{title}</b>\n\n"
             "{description}"
@@ -51,10 +53,13 @@ async def send_telegram(offer):
             title=offer['title'],
             description=description
         )
-        
+
         await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
+
+        # 🔹 Salva l'ASIN nel file
         sent_asins.add(offer['asin'])
         save_sent_asin(offer['asin'])
+
         logging.info(f"✅ Offerta inviata: {offer['title'][:30]}...")
     except Exception as e:
         logging.error(f"❌ Errore invio Telegram: {str(e)}")
@@ -68,11 +73,7 @@ def job():
     if offers:
         random.shuffle(offers)
         for offer in offers:
-            if (
-                offer['asin'] not in sent_asins and
-                offer.get('discount', 0) >= 28 and  # 🔥 Sconto minimo del 28%
-                category not in ["Movies", "Music"]  # 🚫 Esclude film e musica
-            ):
+            if offer['asin'] not in sent_asins:
                 asyncio.run(send_telegram(offer))
                 break
     else:
@@ -96,8 +97,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.info("🚀 Avvio del bot e del web server...")
     threading.Thread(target=run_scheduler, daemon=True).start()
-    
+
     # 🔹 Avvio immediato della prima offerta
-    asyncio.run(job())
-    
+    job()
+
     app.run(host="0.0.0.0", port=8001)
