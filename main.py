@@ -16,9 +16,9 @@ from config import (
 from amazon_api_wrapper import AmazonApiWrapper
 
 # Configurazione GitHub per il salvataggio degli ASIN
-GITHUB_REPO = "pepperic123/nuovo-telegram"  # 🔹 Sostituisci con il tuo repo
-GITHUB_FILE_PATH = "sent_asins.txt"
-GITHUB_TOKEN = "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"  # 🔹 Sostituisci con il tuo token personale
+GITHUB_REPO = os.getenv("GITHUB_REPO")
+GITHUB_FILE_PATH = os.getenv("GITHUB_FILE_PATH")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
