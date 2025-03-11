@@ -22,18 +22,14 @@ GITHUB_TOKEN = "github_pat_11BPZNWZY0MSju87WRNe11_HDUc1EyiP1T0sG9vAfQ2R4DYJwywEu
 # Categorie Amazon per la ricerca
 AMAZON_CATEGORIES = [
     "Appliances",        # Elettrodomestici
-    "ArtsAndCrafts",     # Arti e Mestieri
     "Automotive",        # Automotive
-    "Baby",              # Bambini
+    "SmartHome",         # Dispositivi per la casa intelligente (Alexa, lampadine smart, ecc.)
     "Beauty",            # Bellezza
     "Clothing",          # Abbigliamento
     "Electronics",       # Elettronica
-    "Grocery",           # Alimentari
     "Health",            # Salute
     "Home",              # Casa
-    "Industrial",        # Industria
     "Jewelry",           # Gioielleria
-    "KindleStore",       # Kindle Store
     "Kitchen",           # Cucina
     "Luggage",           # Valigie
     "OfficeProducts",    # Prodotti per ufficio
@@ -42,8 +38,23 @@ AMAZON_CATEGORIES = [
     "Software",          # Software
     "Sports",            # Sport
     "Tools",             # Attrezzi
-    "Toys",              # Giochi
     "VideoGames",        # Videogiochi
     "Watches",           # Orologi
-    "Women",             # Donne
+    "PetSupplies",       # Prodotti per animali domestici
+    "Smartphones",        # Cellulari e smartphone
+    "Tablets",            # Tablet e accessori
+    "Laptops",            # Laptop e notebook
+    "Monitors",           # Monitor per PC
+    "Televisions",        # Televisori
+    "Headphones",         # Cuffie e auricolari
+    "Speakers",           # Altoparlanti e casse audio
+    "Smartwatches",       # Smartwatch e wearable
+    "Cameras",            # Fotocamere e videocamere
+    "GamingConsoles",     # Console da gaming (PS5, Xbox, Switch)
+    "PCComponents",       # Componenti per PC (schede video, SSD, RAM, ecc.)
+    "Networking",         # Router, modem e dispositivi di rete
+    "Drones",             # Droni e accessori
+    "VRHeadsets",         # Visori per realtà virtuale
+    "PowerBanks",         # Power bank e batterie portatili
+    "Chargers",           # Caricatori e accessori per ricarica
     ]
