@@ -1,10 +1,15 @@
 import time
 import random
+import base64
 import asyncio
 import schedule
 import threading
 import os
+import json
+import requests
 import logging
+import firebase_admin
+from firebase_admin import credentials, firestore
 from telegram import Bot
 from flask import Flask
 from config import (
@@ -13,32 +18,47 @@ from config import (
 )
 from amazon_api_wrapper import AmazonApiWrapper
 
-# 📂 Nome del file per salvare gli ASIN
-ASIN_FILE = "sent_asins.txt"
+# ✅ Inizializza Firebase Firestore
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
+if firebase_credentials_json:
+    cred_dict = json.loads(firebase_credentials_json)
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    logging.info("✅ Firebase Firestore connesso correttamente!")
+else:
+    logging.error("❌ Errore: variabile FIREBASE_CREDENTIALS non trovata!")
 
-# 🔹 Carica gli ASIN già inviati da un file locale
-def load_sent_asins():
-    if os.path.exists(ASIN_FILE):
-        with open(ASIN_FILE, "r") as file:
-            return set(file.read().splitlines())
-    return set()
-
-# 🔹 Salva un nuovo ASIN nel file locale
-def save_sent_asin(asin):
-    with open(ASIN_FILE, "a") as file:
-        file.write(asin + "\n")
-
-# ✅ Inizializza l'API Amazon
+# Inizializza l'API Amazon
 amazon_api = AmazonApiWrapper()
+
+# 🔹 Funzione per caricare gli ASIN già inviati da Firestore
+def load_sent_asins():
+    try:
+        docs = db.collection("sent_asins").stream()
+        return {doc.id for doc in docs}
+    except Exception as e:
+        logging.error(f"Errore nel caricamento degli ASIN da Firestore: {e}")
+        return set()
+
+# 🔹 Funzione per salvare un nuovo ASIN in Firestore
+def save_sent_asin(asin):
+    try:
+        db.collection("sent_asins").document(asin).set({"timestamp": time.time()})
+    except Exception as e:
+        logging.error(f"Errore nel salvataggio dell'ASIN su Firestore: {e}")
+
+# Carica gli ASIN già inviati
 sent_asins = load_sent_asins()
 
 # 🔹 Funzione per inviare un'offerta su Telegram
 async def send_telegram(offer):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
-
-        description = offer.get('description', '').strip() or "Nessuna descrizione disponibile."
-
+        description = offer.get('description', '').strip()
+        if not description:
+            description = "\n".join(offer.get('features', [])) or "Nessuna descrizione disponibile."
+        
         text = (
             "🔥 <b>LE MIGLIORI OFFERTE DEL WEB</b>\n\n"
             "🎉 <b>Super Offerta!</b>\n\n"
@@ -56,7 +76,7 @@ async def send_telegram(offer):
 
         await bot.send_photo(chat_id=TELEGRAM_CHAT_ID, photo=offer['image'], caption=text, parse_mode="HTML")
 
-        # 🔹 Salva l'ASIN nel file
+        # 🔹 Salva l'ASIN in Firestore
         sent_asins.add(offer['asin'])
         save_sent_asin(offer['asin'])
 
@@ -74,6 +94,29 @@ def job():
         random.shuffle(offers)
         for offer in offers:
             if offer['asin'] not in sent_asins:
+                
+                # Estrai prezzo e sconto
+                original_price = offer.get('original_price', None)
+                discounted_price = offer.get('price', None)
+                
+                if original_price and discounted_price:
+                    try:
+                        original_price = float(original_price.replace('€', '').replace(',', '.'))
+                        discounted_price = float(discounted_price.replace('€', '').replace(',', '.'))
+                        discount_percentage = ((original_price - discounted_price) / original_price) * 100
+                    except ValueError:
+                        continue  # Salta se c'è un errore nei prezzi
+                else:
+                    continue  # Salta se mancano i prezzi
+                
+                # Filtra offerte con almeno il 28% di sconto
+                if discount_percentage < 28:
+                    continue
+                
+                # Escludi film e musica
+                if category in ["Music", "Movies", "DVD", "Blu-ray"]:
+                    continue
+                
                 asyncio.run(send_telegram(offer))
                 break
     else:
