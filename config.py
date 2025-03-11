@@ -12,8 +12,8 @@ AMAZON_RESOURCES = [
 AMAZON_COUNTRY = "IT"  # Codice paese (es: "IT" per Italia)
 
 # Credenziali Telegram
-TELEGRAM_TOKEN = "7213198162:AAHY9VfC-13x469C6psn3V36L1PGjCQxSs0"  # Token del bot Telegram
-TELEGRAM_CHAT_ID = "-1002290458283"  # ID del chat o canale Telegram
+TELEGRAM_TOKEN = "7193847897:AAE7ny5YWjmPyrxIcgeCjvsy8koYM8jQ7pw"  # Token del bot Telegram
+TELEGRAM_CHAT_ID = "-1001434969904"  # ID del chat o canale Telegram
 
 # Credenziali GitHub (per memorizzare gli ASIN inviati)
 GITHUB_REPO = "pepperic123/nuovo-telegram"
