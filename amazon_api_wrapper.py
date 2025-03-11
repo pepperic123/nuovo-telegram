@@ -47,16 +47,22 @@ class AmazonApiWrapper:
                     if product_category in EXCLUDED_CATEGORIES:
                         continue 
 
-                    # Ottieni i prezzi
+                    # Ottieni il prezzo attuale
                     price_current = item.offers.listings[0].price.amount if item.offers and item.offers.listings else None
-                    price_original = item.offers.listings[0].saving_basis.amount if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'saving_basis') else None
+                    
+                    # Ottieni il prezzo originale (solo se saving_basis esiste e ha 'amount')
+                    price_original = None
+                    if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'saving_basis'):
+                        saving_basis = item.offers.listings[0].saving_basis
+                        if saving_basis and hasattr(saving_basis, 'amount'):
+                            price_original = saving_basis.amount
                     
                     # Calcola sconto e risparmio
                     discount = 0
                     savings = 0
                     if price_original and price_current:
-                        discount = round((1 - (price_current / price_original)) * 100)
-                        savings = round(price_original - price_current, 2)
+                        discount = round((1 - (price_current / price_original)) * 100) if price_original > price_current else 0
+                        savings = round(price_original - price_current, 2) if price_original > price_current else 0
 
                     offer = {
                         "title": item.item_info.title.display_value,
