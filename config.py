@@ -16,8 +16,8 @@ TELEGRAM_TOKEN = "7213198162:AAHY9VfC-13x469C6psn3V36L1PGjCQxSs0"  # Token del b
 TELEGRAM_CHAT_ID = "-1002290458283"  # ID del chat o canale Telegram
 
 # Credenziali GitHub (per memorizzare gli ASIN inviati)
-GITHUB_REPO = "https://raw.githubusercontent.com/pepperic123/telegram-amazon-bot/main/sent_asins.txt"  # URL del file su GitHub
-GITHUB_UPDATE_URL = "https://api.github.com/repos/pepperic123/telegram-amazon-bot/contents/sent_asins.txt"  # URL API per aggiornare il file
+GITHUB_REPO = "pepperic123/nuovo-telegram"
+GITHUB_UPDATE_URL = "https://api.github.com/repos/pepperic123/nuovo-telegram/contents/sent_asins.txt"  # URL API per aggiornare il file
 GITHUB_TOKEN = ""  # Token Gi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tHub (revocalo se esposto)
 # Categorie Amazon per la ricerca
 AMAZON_CATEGORIES = [
