@@ -46,7 +46,7 @@ def save_sent_asins():
 def update_github():
     try:
         url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
-        headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+        headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
 
         # Ottieni l'ultima versione del file per l'SHA
         response = requests.get(url, headers=headers)
