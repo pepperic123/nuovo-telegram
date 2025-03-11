@@ -18,7 +18,7 @@ TELEGRAM_CHAT_ID = "-1002290458283"  # ID del chat o canale Telegram
 # Credenziali GitHub (per memorizzare gli ASIN inviati)
 GITHUB_REPO = "pepperic123/nuovo-telegram"
 GITHUB_UPDATE_URL = "https://api.github.com/repos/pepperic123/nuovo-telegram/contents/sent_asins.txt"  # URL API per aggiornare il file
-GITHUB_TOKEN = "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"
+GITHUB_TOKEN = "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"
 # Categorie Amazon per la ricerca
 AMAZON_CATEGORIES = [
     "Appliances",        # Elettrodomestici
