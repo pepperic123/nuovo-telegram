@@ -41,26 +41,33 @@ class AmazonApiWrapper:
             offers = []
             if response.search_result and response.search_result.items:
                 for item in response.search_result.items:
+                    # Controlla la categoria del prodotto
                     product_category = item.item_info.classifications.binding.display_value if item.item_info.classifications and item.item_info.classifications.binding else "Unknown"
                     
                     # Escludi film e musica
                     if product_category in EXCLUDED_CATEGORIES:
-                        continue 
+                        continue  
 
-                    # Ottieni il prezzo attuale
+                    # Ottieni il prezzo attuale in modo sicuro
                     price_current = None
-if item.offers and item.offers.listings:
-    first_listing = item.offers.listings[0]
-    if hasattr(first_listing, "price") and hasattr(first_listing.price, "amount"):
-        price_current = first_listing.price.amount
-                    
-                    # Ottieni il prezzo originale (solo se saving_basis esiste e ha 'amount')
+                    try:
+                        if item.offers and item.offers.listings:
+                            first_listing = item.offers.listings[0]
+                            if hasattr(first_listing, "price") and hasattr(first_listing.price, "amount"):
+                                price_current = first_listing.price.amount
+                    except Exception:
+                        pass  # Se non trova il prezzo, continua
+
+                    # Ottieni il prezzo originale in modo sicuro
                     price_original = None
-                    if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'saving_basis'):
-                        saving_basis = item.offers.listings[0].saving_basis
-                        if saving_basis and hasattr(saving_basis, 'amount'):
-                            price_original = saving_basis.amount
-                    
+                    try:
+                        if item.offers and item.offers.listings:
+                            first_listing = item.offers.listings[0]
+                            if hasattr(first_listing, "saving_basis") and hasattr(first_listing.saving_basis, "amount"):
+                                price_original = first_listing.saving_basis.amount
+                    except Exception:
+                        pass  # Se non trova il prezzo originale, continua
+
                     # Calcola sconto e risparmio
                     discount = 0
                     savings = 0
