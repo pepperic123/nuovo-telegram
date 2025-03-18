@@ -57,4 +57,5 @@ AMAZON_CATEGORIES = [
     "VRHeadsets",         # Visori per realtà virtuale
     "PowerBanks",         # Power bank e batterie portatili
     "Chargers",           # Caricatori e accessori per ricarica
+    "AmazonDevices",  # Dispositivi Amazon (Echo, Fire TV, Kindle, ecc.)
     ]
