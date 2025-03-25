@@ -56,6 +56,7 @@ AMAZON_CATEGORIES = [
     "Drones",             # Droni e accessori
     "VRHeadsets",         # Visori per realtà virtuale
     "PowerBanks",         # Power bank e batterie portatili
+    "Echo e Alexa",       # Dispositivi Amazon (Echo, Fire TV, Kindle, ecc.)
     "Chargers",           # Caricatori e accessori per ricarica
     "AmazonDevices",  # Dispositivi Amazon (Echo, Fire TV, Kindle, ecc.)
     ]
