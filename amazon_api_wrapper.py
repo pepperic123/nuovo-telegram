@@ -105,7 +105,7 @@ class AmazonApiWrapper:
     # ==========================
     # SCRAPING
     # ==========================
-    def _get_offers_scraping(self, keyword):
+def _get_offers_scraping(self, keyword):
     offers = []
     try:
         url = f"https://www.amazon.it/s?k={keyword}"
