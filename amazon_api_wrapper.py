@@ -1,15 +1,19 @@
 import time
 import random
+import requests
+from bs4 import BeautifulSoup
+
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.search_items_request import SearchItemsRequest
 from paapi5_python_sdk.rest import ApiException
+
 from config import (
     AMAZON_ACCESS_KEY, AMAZON_SECRET_KEY,
     AMAZON_PARTNER_TAG, AMAZON_HOST, AMAZON_RESOURCES
 )
 
-# Categorie da escludere
 EXCLUDED_CATEGORIES = ["Movies", "DVD", "Blu-ray", "Music", "CD", "Vinyl"]
+
 
 class AmazonApiWrapper:
     def __init__(self):
@@ -25,93 +29,124 @@ class AmazonApiWrapper:
             print(f"❌ Errore inizializzazione API: {str(e)}")
             self.api = None
 
+    # ==========================
+    # METODO PRINCIPALE
+    # ==========================
     def get_offers(self, category):
-        if not self.api:
-            return []
+        # 1️⃣ PROVA PA-API
+        if self.api:
+            try:
+                offers = self._get_offers_paapi(category)
+                if offers:
+                    return offers
+            except Exception as e:
+                print(f"⚠️ PA-API fallita: {e}")
 
-        # ⏳ Attesa casuale per evitare limiti di frequenza
+        # 2️⃣ FALLBACK SCRAPING
+        print("🔄 Uso fallback SCRAPING")
+        return self._get_offers_scraping(category)
+
+    # ==========================
+    # PA-API
+    # ==========================
+    def _get_offers_paapi(self, category):
         time.sleep(random.uniform(2, 4))
 
-        for attempt in range(3):  # fino a 3 tentativi
-            try:
-                request = SearchItemsRequest(
-                    partner_tag=AMAZON_PARTNER_TAG,
-                    partner_type="Associates",
-                    keywords=category,
-                    resources=AMAZON_RESOURCES,
-                    item_count=10
+        request = SearchItemsRequest(
+            partner_tag=AMAZON_PARTNER_TAG,
+            partner_type="Associates",
+            keywords=category,
+            resources=AMAZON_RESOURCES,
+            item_count=10
+        )
+
+        response = self.api.search_items(request)
+        offers = []
+
+        if response.search_result and response.search_result.items:
+            for item in response.search_result.items:
+
+                product_category = (
+                    item.item_info.classifications.binding.display_value
+                    if item.item_info.classifications and item.item_info.classifications.binding
+                    else "Unknown"
                 )
 
-                response = self.api.search_items(request)
-
-                offers = []
-                if response.search_result and response.search_result.items:
-                    for item in response.search_result.items:
-                        # Controlla la categoria del prodotto
-                        product_category = (
-                            item.item_info.classifications.binding.display_value
-                            if item.item_info.classifications and item.item_info.classifications.binding
-                            else "Unknown"
-                        )
-
-                        # Escludi film e musica
-                        if product_category in EXCLUDED_CATEGORIES:
-                            continue  
-
-                        # Prezzo attuale
-                        price_current = None
-                        try:
-                            if item.offers and item.offers.listings:
-                                first_listing = item.offers.listings[0]
-                                if hasattr(first_listing, "price") and hasattr(first_listing.price, "amount"):
-                                    price_current = first_listing.price.amount
-                        except Exception:
-                            pass
-
-                        # Prezzo originale
-                        price_original = None
-                        try:
-                            if item.offers and item.offers.listings:
-                                first_listing = item.offers.listings[0]
-                                if hasattr(first_listing, "saving_basis") and hasattr(first_listing.saving_basis, "amount"):
-                                    price_original = first_listing.saving_basis.amount
-                        except Exception:
-                            pass
-
-                        # Calcolo sconto e risparmio
-                        discount = 0
-                        savings = 0
-                        if price_original and price_current:
-                            discount = round((1 - (price_current / price_original)) * 100) if price_original > price_current else 0
-                            savings = round(price_original - price_current, 2) if price_original > price_current else 0
-
-                        offer = {
-                            "title": item.item_info.title.display_value,
-                            "category": product_category,
-                            "price_current": f"{price_current}€" if price_current else "N/A",
-                            "price_original": f"{price_original}€" if price_original else "N/A",
-                            "discount": f"{discount}%" if discount > 0 else "N/A",
-                            "savings": f"{savings}€" if savings > 0 else "N/A",
-                            "image": item.images.primary.large.url if item.images else "N/A",
-                            "link": item.detail_page_url,
-                            "asin": item.asin
-                        }
-                        offers.append(offer)
-
-                return offers
-
-            except ApiException as e:
-                if "TooManyRequests" in e.body:
-                    wait_time = random.uniform(5, 10)
-                    print(f"⚠️ Limite API raggiunto. Attendo {wait_time:.1f}s e riprovo ({attempt+1}/3)...")
-                    time.sleep(wait_time)
+                if product_category in EXCLUDED_CATEGORIES:
                     continue
-                else:
-                    print(f"❌ Errore PAAPI 5.0: {e.body}")
-                    return []
-            except Exception as e:
-                print(f"❌ Errore generico Amazon API: {str(e)}")
-                return []
 
-        print("❌ Troppi tentativi falliti, salto la categoria.")
-        return []
+                price_current = None
+                price_original = None
+
+                try:
+                    listing = item.offers.listings[0]
+                    if listing.price and listing.price.amount:
+                        price_current = listing.price.amount
+                    if listing.saving_basis and listing.saving_basis.amount:
+                        price_original = listing.saving_basis.amount
+                except Exception:
+                    pass
+
+                offer = {
+                    "title": item.item_info.title.display_value,
+                    "category": product_category,
+                    "price_current": f"{price_current}€" if price_current else "N/A",
+                    "price_original": f"{price_original}€" if price_original else "N/A",
+                    "discount": "N/A",
+                    "savings": "N/A",
+                    "image": item.images.primary.large.url if item.images else "N/A",
+                    "link": item.detail_page_url,
+                    "asin": item.asin
+                }
+                offers.append(offer)
+
+        return offers
+
+    # ==========================
+    # SCRAPING
+    # ==========================
+    def _get_offers_scraping(self, keyword):
+        offers = []
+        try:
+            url = f"https://www.amazon.it/s?k={keyword}"
+            headers = {
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Language": "it-IT,it;q=0.9"
+            }
+
+            r = requests.get(url, headers=headers, timeout=10)
+            soup = BeautifulSoup(r.text, "html.parser")
+
+            items = soup.select("div[data-asin]")
+
+            for item in items:
+                asin = item.get("data-asin")
+                if not asin:
+                    continue
+
+                title_el = item.select_one("h2 span")
+                price_el = item.select_one("span.a-price-whole")
+                image_el = item.select_one("img")
+
+                if not title_el or not price_el or not image_el:
+                    continue
+
+                offer = {
+                    "title": title_el.text.strip(),
+                    "category": keyword,
+                    "price_current": price_el.text.strip() + "€",
+                    "price_original": "N/A",
+                    "discount": "N/A",
+                    "savings": "N/A",
+                    "image": image_el.get("src"),
+                    "link": f"https://www.amazon.it/dp/{asin}",
+                    "asin": asin
+                }
+
+                offers.append(offer)
+
+            return offers
+
+        except Exception as e:
+            print(f"❌ Errore scraping: {e}")
+            return []
