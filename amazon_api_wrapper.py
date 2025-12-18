@@ -106,47 +106,49 @@ class AmazonApiWrapper:
     # SCRAPING
     # ==========================
     def _get_offers_scraping(self, keyword):
-        offers = []
-        try:
-            url = f"https://www.amazon.it/s?k={keyword}"
-            headers = {
-                "User-Agent": "Mozilla/5.0",
-                "Accept-Language": "it-IT,it;q=0.9"
+    offers = []
+    try:
+        url = f"https://www.amazon.it/s?k={keyword}"
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept-Language": "it-IT,it;q=0.9"
+        }
+
+        r = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        items = soup.select("div[data-asin]")
+
+        for item in items:
+            asin = item.get("data-asin")
+            if not asin:
+                continue
+
+            title_el = item.select_one("h2 span")
+            image_el = item.select_one("img")
+            price_el = item.select_one("span.a-price-whole, span.a-offscreen")  # FIX 1
+
+            if not title_el or not image_el:
+                continue  # FIX 2: non scartare se manca il prezzo
+
+            price_text = price_el.text.strip() + "€" if price_el else "Offerta su Amazon"  # FIX 2
+
+            offer = {
+                "title": title_el.text.strip(),
+                "category": keyword,
+                "price_current": price_text,
+                "price_original": "N/A",
+                "discount": "N/A",
+                "savings": "N/A",
+                "image": image_el.get("src"),
+                "link": f"https://www.amazon.it/dp/{asin}",
+                "asin": asin
             }
 
-            r = requests.get(url, headers=headers, timeout=10)
-            soup = BeautifulSoup(r.text, "html.parser")
+            offers.append(offer)
 
-            items = soup.select("div[data-asin]")
+        return offers
 
-            for item in items:
-                asin = item.get("data-asin")
-                if not asin:
-                    continue
-
-                title_el = item.select_one("h2 span")
-                price_el = item.select_one("span.a-price-whole")
-                image_el = item.select_one("img")
-
-                if not title_el or not price_el or not image_el:
-                    continue
-
-                offer = {
-                    "title": title_el.text.strip(),
-                    "category": keyword,
-                    "price_current": price_el.text.strip() + "€",
-                    "price_original": "N/A",
-                    "discount": "N/A",
-                    "savings": "N/A",
-                    "image": image_el.get("src"),
-                    "link": f"https://www.amazon.it/dp/{asin}",
-                    "asin": asin
-                }
-
-                offers.append(offer)
-
-            return offers
-
-        except Exception as e:
-            print(f"❌ Errore scraping: {e}")
-            return []
+    except Exception as e:
+        print(f"❌ Errore scraping: {e}")
+        return []
